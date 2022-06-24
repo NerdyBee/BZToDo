@@ -1,25 +1,31 @@
-import {ScrollView, StyleSheet, Text, Touchable, View} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  Touchable,
+  View,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import {TouchableOpacity} from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Todo = ({navigation}) => {
-  const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
 
   useEffect(() => {
-    navigation.addListener('focus', () => {
-      getData();
-    });
+    getData();
   }, []);
 
   const getData = async () => {
     try {
-      const value = await AsyncStorage.getItem('tasks');
-      if (value !== null) {
-        // value previously stored
-        setTasks(value);
-        console.log(tasks);
-      }
+      await AsyncStorage.getItem('Todo').then(tasks => {
+        const parsedTasks = JSON.parse(tasks);
+        if (parsedTasks && typeof parsedTasks === 'object') {
+          setFilteredTasks(parsedTasks);
+          console.log(filteredTasks);
+        }
+      });
     } catch (e) {
       // error reading value
       console.log(e);
@@ -28,16 +34,16 @@ const Todo = ({navigation}) => {
 
   return (
     <View style={styles.body}>
-      <ScrollView>
-        {tasks?.map(([index, task]) => {
-          return (
-            <View style={styles.item} key={index}>
-              <Text style={styles.title}>{task.Title}</Text>
-              <Text style={styles.detail}>{task.Descr}</Text>
-            </View>
-          );
-        })}
-      </ScrollView>
+      <FlatList
+        data={filteredTasks}
+        renderItem={({task}) => (
+          <View style={styles.item}>
+            <Text style={styles.title}>{task.Title}</Text>
+            <Text style={styles.detail}>{task.Desc}</Text>
+          </View>
+        )}
+        keyExtractor={(task, index) => index.toString()}
+      />
       <TouchableOpacity
         style={styles.button}
         onPress={() => {

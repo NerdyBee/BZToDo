@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, View, Alert} from 'react-native';
 import React, {useState} from 'react';
 import {TextInput} from 'react-native-gesture-handler';
 import CustomButton from '../utils/CustomButton';
@@ -19,11 +19,12 @@ const Task = ({navigation}) => {
     } else {
       try {
         var toList = {
+          Id: 2,
           Title: title,
           Desc: descr,
         };
         const jsonValue = JSON.stringify(toList);
-        await AsyncStorage.setItem('Tasks', jsonValue);
+        await AsyncStorage.setItem('ToDo', jsonValue);
         alert('Data successfully saved');
         navigation.goBack();
       } catch (e) {
