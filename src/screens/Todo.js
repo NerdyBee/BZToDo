@@ -1,16 +1,14 @@
-import {
-  StyleSheet,
-  Text,
-  Touchable,
-  View,
-  TouchableOpacity,
-  FlatList,
-} from 'react-native';
+import {StyleSheet, Text, View, TouchableOpacity, FlatList} from 'react-native';
 import React, {useEffect, useState} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {setTaskID, setTasks} from '../redux/actions';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Todo = ({navigation}) => {
+  const {tasks} = useSelector(state => state.taskReducer);
+  const dispatch = useDispatch();
+
   const [filteredTasks, setFilteredTasks] = useState([]);
 
   useEffect(() => {
@@ -18,18 +16,15 @@ const Todo = ({navigation}) => {
   }, []);
 
   const getData = async () => {
-    try {
-      await AsyncStorage.getItem('Todo').then(tasks => {
+    AsyncStorage.getItem('ToDo')
+      .then(tasks => {
         const parsedTasks = JSON.parse(tasks);
         if (parsedTasks && typeof parsedTasks === 'object') {
-          setFilteredTasks(parsedTasks);
-          console.log(filteredTasks);
+          dispatch(setTasks(parsedTasks));
+          setFilteredTask(parsedTasks.filter(task => task.Done === false));
         }
-      });
-    } catch (e) {
-      // error reading value
-      console.log(e);
-    }
+      })
+      .catch(err => console.log(err));
   };
 
   return (
@@ -38,8 +33,8 @@ const Todo = ({navigation}) => {
         data={filteredTasks}
         renderItem={({task}) => (
           <View style={styles.item}>
-            <Text style={styles.title}>{task.Title}</Text>
-            <Text style={styles.detail}>{task.Desc}</Text>
+            <Text style={styles.title}>{task}</Text>
+            <Text style={styles.detail}>{task}</Text>
           </View>
         )}
         keyExtractor={(task, index) => index.toString()}

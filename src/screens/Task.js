@@ -1,16 +1,35 @@
 import {StyleSheet, Text, View, Alert} from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {setTasks} from '../redux/actions';
 import {TextInput} from 'react-native-gesture-handler';
 import CustomButton from '../utils/CustomButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Task = ({navigation}) => {
+  const {tasks, taskID} = useSelector(state => state.taskReducer);
+  const dispatch = useDispatch();
+
   const [title, setTitle] = useState('');
   const [descr, setDescr] = useState('');
   const [done, setDone] = useState(false);
 
+  useEffect(() => {
+    navigation.addListener('focus', () => {
+      getTask();
+    });
+  }, []);
+
   const setTask = () => {
     storeData();
+  };
+
+  const getTask = () => {
+    const Task = tasks.find(task => task.ID === taskID);
+    if (Task) {
+      setTitle(Task.Title);
+      setDescr(Task.Desc);
+    }
   };
 
   const storeData = async () => {
@@ -18,18 +37,31 @@ const Task = ({navigation}) => {
       Alert.alert('Warning!', 'Please write your task title.');
     } else {
       try {
-        var toList = {
-          Id: 2,
+        var Task = {
+          ID: taskID,
           Title: title,
           Desc: descr,
+          // Done: done,
+          // Color: color,
+          // Image: image,
         };
-        const jsonValue = JSON.stringify(toList);
-        await AsyncStorage.setItem('ToDo', jsonValue);
-        alert('Data successfully saved');
-        navigation.goBack();
-      } catch (e) {
-        // saving error
-        console.log(e);
+        const index = tasks.findIndex(task => task.ID === taskID);
+        let newTasks = [];
+        if (index > -1) {
+          newTasks = [...tasks];
+          newTasks[index] = Task;
+        } else {
+          newTasks = [...tasks, Task];
+        }
+        AsyncStorage.setItem('Tasks', JSON.stringify(newTasks))
+          .then(() => {
+            dispatch(setTasks(newTasks));
+            Alert.alert('Success!', 'Task saved successfully.');
+            navigation.goBack();
+          })
+          .catch(err => console.log(err));
+      } catch (error) {
+        console.log(error);
       }
     }
   };
